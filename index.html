@@ -1,0 +1,356 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>SOS Web — Modern UI</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#0f1724; --card:#0b1220; --muted:#9aa8bf;
+    --accent:#ff6b6b; --accent-2:#ffb4a2; --glass:rgba(255,255,255,0.03);
+    --success:#2dd4bf;
+  }
+  *{box-sizing:border-box}
+  html,body{height:100%;margin:0;font-family:Inter,system-ui,Segoe UI,Roboto,Arial;background:linear-gradient(180deg,#071027 0%, #0f1724 100%);color:#e6eef8}
+  .wrap{max-width:900px;margin:18px auto;padding:18px}
+  header{display:flex;align-items:center;justify-content:space-between;gap:12px}
+  h1{margin:0;font-size:1.2rem;letter-spacing:0.2px}
+  .lead{color:var(--muted);font-size:0.9rem}
+  .grid{display:grid;grid-template-columns:1fr 360px;gap:18px;margin-top:16px}
+  @media (max-width:880px){ .grid{grid-template-columns:1fr} }
+
+  .card{background:linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));border-radius:14px;padding:16px;box-shadow:0 6px 20px rgba(2,6,23,0.6);border:1px solid rgba(255,255,255,0.03)}
+  .profile{display:flex;gap:12px;align-items:center}
+  .avatar{width:56px;height:56px;border-radius:12px;background:linear-gradient(135deg,var(--accent),var(--accent-2));display:flex;align-items:center;justify-content:center;font-weight:700;color:#081225}
+  .info{line-height:1}
+  .info .name{font-weight:600}
+  .info .phone{color:var(--muted);font-size:0.9rem}
+
+  /* SOS big button */
+  .sos-wrap{display:flex;flex-direction:column;align-items:center;justify-content:center;padding:28px}
+  .sos-button{
+    width:220px;height:220px;border-radius:50%;background:radial-gradient(circle at 30% 30%, rgba(255,107,107,0.14), rgba(255,107,107,0.06));
+    border:8px solid rgba(255,107,107,0.15);display:flex;flex-direction:column;align-items:center;justify-content:center;cursor:pointer;transition:transform .14s ease, box-shadow .14s;
+    box-shadow:0 8px 30px rgba(255,107,107,0.06), inset 0 -8px 18px rgba(0,0,0,0.25);
+  }
+  .sos-button:active{transform:scale(.96)}
+  .sos-center{width:140px;height:140px;border-radius:50%;background:var(--accent);display:flex;flex-direction:column;align-items:center;justify-content:center;font-weight:700;color:#081225;box-shadow:0 8px 30px rgba(255,107,107,0.18)}
+  .sos-center .big{font-size:28px}
+  .sos-hint{margin-top:12px;color:var(--muted);font-size:0.92rem;text-align:center}
+
+  /* contacts list UI */
+  .contacts-list{display:flex;flex-direction:column;gap:10px}
+  .contact-row{display:flex;align-items:center;gap:10px;padding:10px;border-radius:10px;background:var(--glass);border:1px solid rgba(255,255,255,0.02)}
+  .contact-thumb{width:44px;height:44px;flex-shrink:0;border-radius:10px;background:linear-gradient(135deg,#1e293b,#334155);display:flex;align-items:center;justify-content:center;font-weight:700;color:var(--accent-2)}
+  .contact-meta{flex:1}
+  .contact-meta .cname{font-weight:600}
+  .contact-meta .cphone{color:var(--muted);font-size:0.87rem}
+  .contact-actions button{background:transparent;border:0;color:var(--muted);cursor:pointer;padding:6px;border-radius:8px}
+  .small-btn{padding:8px 10px;border-radius:10px;background:rgba(255,255,255,0.02);border:1px solid rgba(255,255,255,0.03);color:var(--muted);cursor:pointer}
+
+  .controls{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}
+  input[type=text], input[type=tel], .modal input{width:100%;padding:10px;border-radius:10px;border:1px solid rgba(255,255,255,0.04);background:transparent;color:inherit}
+  label{color:var(--muted);font-size:0.85rem;margin-bottom:6px;display:block}
+
+  .footer-note{color:var(--muted);font-size:0.85rem;margin-top:8px}
+
+  /* modal */
+  .modal-backdrop{position:fixed;inset:0;background:rgba(2,6,23,0.6);display:none;align-items:center;justify-content:center;padding:20px;z-index:60}
+  .modal{background:#071029;border-radius:12px;padding:16px;min-width:300px;max-width:520px;border:1px solid rgba(255,255,255,0.03)}
+  .row{display:flex;gap:8px}
+  .row > *{flex:1}
+
+  /* status toast */
+  .toast{position:fixed;left:50%;transform:translateX(-50%);bottom:20px;background:#071029;padding:10px 14px;border-radius:10px;border:1px solid rgba(255,255,255,0.03);box-shadow:0 6px 18px rgba(2,6,23,0.6);display:none;color:var(--muted);z-index:80}
+
+</style>
+</head>
+<body>
+  <div class="wrap">
+    <header>
+      <div style="display:flex;gap:12px;align-items:center">
+        <div style="width:44px;height:44;border-radius:10px;background:linear-gradient(135deg,#0f1724,#071025);display:flex;align-items:center;justify-content:center">🔴</div>
+        <div>
+          <h1>SOS Web — Modern UI</h1>
+          <div class="lead">Quick access SOS — stores account locally</div>
+        </div>
+      </div>
+      <div style="text-align:right">
+        <div id="loggedArea" style="display:none">
+          <div class="lead" id="topUser">—</div>
+        </div>
+        <div id="loginBtnArea">
+          <button id="openSetup" class="small-btn">Setup Account</button>
+        </div>
+      </div>
+    </header>
+
+    <div class="grid">
+      <!-- left column: big sos -->
+      <div>
+        <div class="card sos-wrap">
+          <div class="sos-button" id="sosButton" title="Press to send SOS">
+            <div class="sos-center">
+              <div class="big">SOS</div>
+              <div style="font-size:12px;margin-top:6px">Send Location</div>
+            </div>
+          </div>
+          <div class="sos-hint">Tap and confirm to send your live location to emergency contacts.</div>
+          <div style="margin-top:14px" class="footer-note">If the server is unreachable, your device's SMS composer opens as a fallback.</div>
+        </div>
+
+        <div class="card" style="margin-top:12px">
+          <div style="display:flex;align-items:center;justify-content:space-between">
+            <div><strong>Quick Actions</strong></div>
+            <div class="small" id="contactsCount">0 contacts</div>
+          </div>
+          <div class="controls" style="margin-top:10px">
+            <button id="openContacts" class="small-btn">Manage Contacts</button>
+            <button id="openSetup2" class="small-btn">Account</button>
+            <button id="testSOS" class="small-btn">Test (no SMS)</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- right column: contacts / profile -->
+      <div>
+        <div class="card">
+          <div class="profile">
+            <div class="avatar" id="avatar">U</div>
+            <div class="info">
+              <div class="name" id="displayName">Not set</div>
+              <div class="phone" id="displayPhone">—</div>
+            </div>
+            <div style="margin-left:auto">
+              <button id="logout" class="small-btn" style="display:none">Logout</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="card" style="margin-top:12px">
+          <div style="display:flex;align-items:center;justify-content:space-between">
+            <strong>Emergency Contacts</strong>
+            <button id="addContactBtn" class="small-btn">Add</button>
+          </div>
+          <div style="margin-top:10px" class="contacts-list" id="contactsList">
+            <div class="lead" style="color:var(--muted)">No contacts yet</div>
+          </div>
+          <div class="footer-note" style="margin-top:12px">Recommended: add at least 3 contacts. Contacts stored only in your browser.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- modal backdrop -->
+  <div class="modal-backdrop" id="modalBackdrop">
+    <div class="modal" id="modal">
+      <!-- content injected by JS -->
+    </div>
+  </div>
+
+  <div class="toast" id="toast">Status</div>
+
+<script>
+/* --- data keys --- */
+const LS_USER = 'sos_ui2_user'
+const LS_CONTACTS = 'sos_ui2_contacts'
+
+/* --- helpers --- */
+const $ = (id)=>document.getElementById(id)
+function t(msg, time=2800){ const to=$('toast'); to.textContent=msg; to.style.display='block'; setTimeout(()=>to.style.display='none', time) }
+function loadUser(){ try{return JSON.parse(localStorage.getItem(LS_USER)) }catch(e){return null} }
+function saveUser(u){ localStorage.setItem(LS_USER, JSON.stringify(u)) }
+function removeUser(){ localStorage.removeItem(LS_USER) }
+function loadContacts(){ try{return JSON.parse(localStorage.getItem(LS_CONTACTS))||[] }catch(e){return[]} }
+function saveContacts(c){ localStorage.setItem(LS_CONTACTS, JSON.stringify(c)) }
+
+/* --- UI wiring --- */
+const modalBackdrop = $('modalBackdrop')
+const modal = $('modal')
+
+function openModal(html){ modal.innerHTML = html; modalBackdrop.style.display='flex' }
+function closeModal(){ modalBackdrop.style.display='none'; modal.innerHTML='' }
+modalBackdrop.addEventListener('click', (e)=>{ if(e.target===modalBackdrop) closeModal() })
+
+/* --- render main --- */
+function renderMain(){
+  const user = loadUser()
+  if(user){
+    $('displayName').textContent = user.name
+    $('displayPhone').textContent = user.phone
+    $('avatar').textContent = (user.name||'U').slice(0,1).toUpperCase()
+    $('openSetup').style.display='none'; $('loginBtnArea').style.display='none'
+    $('loggedArea').style.display='block'; $('logout').style.display='inline-block'
+    $('topUser').textContent = user.name + ' • ' + user.phone
+  } else {
+    $('displayName').textContent = 'Not set'
+    $('displayPhone').textContent = '—'
+    $('avatar').textContent = 'U'
+    $('openSetup').style.display='inline-block'; $('loginBtnArea').style.display='block'
+    $('loggedArea').style.display='none'; $('logout').style.display='none'
+  }
+
+  const contacts = loadContacts()
+  const list = $('contactsList'); list.innerHTML=''
+  if(contacts.length===0){
+    list.innerHTML = '<div class="lead" style="color:var(--muted)">No contacts yet</div>'
+  } else {
+    contacts.forEach((c,idx)=>{
+      const el = document.createElement('div'); el.className='contact-row'
+      el.innerHTML = `
+        <div class="contact-thumb">${(c.name||'C').slice(0,1).toUpperCase()}</div>
+        <div class="contact-meta">
+          <div class="cname">${escapeHtml(c.name)}</div>
+          <div class="cphone">${escapeHtml(c.phone)}</div>
+        </div>
+        <div class="contact-actions">
+          <button data-idx="${idx}" class="edit">Edit</button>
+          <button data-idx="${idx}" class="remove">Remove</button>
+        </div>
+      `
+      list.appendChild(el)
+    })
+  }
+  $('contactsCount').textContent = contacts.length + (contacts.length===1 ? ' contact' : ' contacts')
+}
+
+/* small html sanitizer (not bulletproof — fine for local app) */
+function escapeHtml(s){ return (s||'').toString().replace(/[&<>"]/g, ch => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[ch])) }
+
+/* --- setup/account modal --- */
+function showSetup(){
+  const user = loadUser() || {name:'', phone:''}
+  openModal(`
+    <h3>Account setup</h3>
+    <div style="margin-top:8px">
+      <label>Name</label>
+      <input id="m_name" value="${escapeHtml(user.name)}" placeholder="Your full name"/>
+    </div>
+    <div style="margin-top:8px">
+      <label>Phone (E.164, e.g. +9198...)</label>
+      <input id="m_phone" value="${escapeHtml(user.phone)}" placeholder="+countrycodexxxxx"/>
+    </div>
+    <div style="display:flex;gap:8px;margin-top:12px">
+      <button id="m_save" class="small-btn">Save</button>
+      <button id="m_cancel" class="small-btn">Cancel</button>
+    </div>
+  `)
+  $('m_cancel').onclick = closeModal
+  $('m_save').onclick = ()=>{
+    const name = $('m_name').value.trim(); const phone = $('m_phone').value.trim()
+    if(!name||!phone){ alert('Enter name & phone'); return }
+    saveUser({name,phone}); renderMain(); closeModal(); t('Account saved')
+  }
+}
+
+/* --- contacts modal --- */
+function showAddContact(pref={name:'',phone:''}, idx=null){
+  openModal(`
+    <h3>${idx===null ? 'Add contact' : 'Edit contact'}</h3>
+    <div style="margin-top:8px">
+      <label>Contact name</label>
+      <input id="c_name" value="${escapeHtml(pref.name)}" placeholder="Name"/>
+    </div>
+    <div style="margin-top:8px">
+      <label>Contact phone</label>
+      <input id="c_phone" value="${escapeHtml(pref.phone)}" placeholder="+countrycodexxxxx"/>
+    </div>
+    <div style="display:flex;gap:8px;margin-top:12px">
+      <button id="c_save" class="small-btn">Save</button>
+      <button id="c_cancel" class="small-btn">Cancel</button>
+    </div>
+  `)
+  $('c_cancel').onclick = closeModal
+  $('c_save').onclick = ()=>{
+    const name = $('c_name').value.trim(); const phone = $('c_phone').value.trim()
+    if(!name||!phone){ alert('Please enter both'); return }
+    const contacts = loadContacts()
+    if(idx===null){ contacts.push({name,phone}) } else { contacts[idx] = {name,phone} }
+    saveContacts(contacts); renderMain(); closeModal(); t('Contact saved')
+  }
+}
+
+/* handle contact list actions */
+document.addEventListener('click', (e)=>{
+  if(e.target.id==='openSetup' || e.target.id==='openSetup2'){ showSetup() }
+  if(e.target.id==='addContactBtn'){ showAddContact() }
+  if(e.target.classList.contains('edit')){ const i = Number(e.target.dataset.idx); const c = loadContacts()[i]; showAddContact(c, i) }
+  if(e.target.classList.contains('remove')){ const i = Number(e.target.dataset.idx); if(confirm('Remove contact?')){ const arr=loadContacts(); arr.splice(i,1); saveContacts(arr); renderMain(); t('Contact removed') } }
+  if(e.target.id==='logout'){ if(confirm('Logout (local data remains)?')){ removeUser(); renderMain(); t('Logged out') } }
+  if(e.target.id==='openContacts'){ showContactsModal() }
+  if(e.target.id==='testSOS'){ t('Test: geolocation & UI only'); runTestSOS() }
+})
+
+/* small contacts modal to list/manage */
+function showContactsModal(){
+  const contacts = loadContacts()
+  const rows = contacts.map((c,i)=>`<div style="display:flex;align-items:center;gap:8px;padding:8px;border-radius:8px;background:rgba(255,255,255,0.02);margin-bottom:6px">
+    <div style="width:36px;height:36px;border-radius:8px;background:linear-gradient(135deg,#0b1220,#1f2a44);display:flex;align-items:center;justify-content:center">${escapeHtml((c.name||'C').slice(0,1).toUpperCase())}</div>
+    <div style="flex:1"><div style="font-weight:600">${escapeHtml(c.name)}</div><div style="color:var(--muted)">${escapeHtml(c.phone)}</div></div>
+    <div><button data-idx="${i}" class="edit small-btn">Edit</button></div>
+  </div>`).join('')
+  openModal(`<h3>Contacts</h3><div style="max-height:320px;overflow:auto;margin-top:10px">${rows||'<div class="lead" style="color:var(--muted)">No contacts yet</div>'}</div><div style="display:flex;gap:8px;margin-top:10px"><button id="closeC" class="small-btn">Close</button><button id="newC" class="small-btn">New contact</button></div>`)
+  $('closeC').onclick = closeModal
+  $('newC').onclick = ()=>{ closeModal(); showAddContact() }
+}
+
+/* --- SOS flow --- */
+$('sosButton').addEventListener('click', ()=>confirmAndSend())
+
+function confirmAndSend(){
+  const user = loadUser()
+  if(!user){ if(!confirm('You have not set up an account. Open setup?')) return; showSetup(); return }
+  if(!confirm('Send SOS to your emergency contacts now?')) return
+  sendSOS()
+}
+
+async function runTestSOS(){
+  if(!navigator.geolocation){ t('Geolocation not available'); return }
+  navigator.geolocation.getCurrentPosition((pos)=>{ t('Got location: ' + pos.coords.latitude.toFixed(4) + ','+pos.coords.longitude.toFixed(4)) }, (err)=> t('Failed: ' + err.message))
+}
+
+async function sendSOS(){
+  const status = 'Getting location...'; t(status, 2000)
+  const contacts = loadContacts()
+  if(contacts.length < 1){ alert('No contacts: add at least one (recommended 3)'); return }
+  if(!navigator.geolocation){ alert('Geolocation not supported'); return }
+
+  navigator.geolocation.getCurrentPosition(async (pos)=>{
+    const lat = pos.coords.latitude, lon = pos.coords.longitude
+    const user = loadUser()
+    const payload = { user, coords:{lat,lon,accuracy:pos.coords.accuracy}, contacts }
+    t('Sending to server...')
+    try {
+      const res = await fetch('/api/send-sos', {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(payload)})
+      if(res.ok){ t('SOS delivered to server — contacts notified (if server sent SMS)') }
+      else { console.warn('server error', res.status); t('Server error — opening SMS composer fallback'); smsFallback(user, lat, lon, contacts) }
+    } catch(err){
+      console.warn('network', err); t('Network error — SMS fallback'); smsFallback(user, lat, lon, contacts)
+    }
+  }, (err)=>{ alert('Could not get location: ' + err.message) }, {enableHighAccuracy:true, timeout:12000})
+}
+
+/* fallback open SMS composer */
+function smsFallback(user, lat, lon, contacts){
+  const map = 'https://www.google.com/maps/search/?api=1&query='+lat+','+lon
+  const msg = `${user.name} (${user.phone}) needs help! Location: ${map}`
+  const to = contacts.slice(0,5).map(c=>c.phone).join(',')
+  // open sms composer (best-effort)
+  window.open('sms:'+to+'?body='+encodeURIComponent(msg), '_blank')
+}
+
+/* init render */
+renderMain()
+
+/* load some demo data if empty for first-time preview (optional) */
+(function seedIfEmpty(){
+  if(!loadUser() && !localStorage.getItem('sos_ui2_seeded')){
+    // do not automatically save user, just leave UI empty; uncomment below to prefill demo data
+    // saveUser({name:'Demo User', phone:'+911234567890'}); saveContacts([{name:'Mom',phone:'+911111111111'},{name:'Friend',phone:'+922222222222'}])
+    localStorage.setItem('sos_ui2_seeded', '1')
+  }
+})()
+</script>
+</body>
+</html>
